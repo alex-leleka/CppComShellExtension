@@ -60,19 +60,28 @@ void FileContextMenuExt::OnVerbCreateLogFile(HWND hWnd)
 			if(nFiles < 1)
 				return;
 			wchar_t ** fileNames = new wchar_t*[nFiles];
+			UINT fileNamesIndex = 0;
 			for(UINT i = 0; i < nFiles; i++)
 			{
 				UINT file_name_buf_size =  DragQueryFile(hDrop, i, NULL, 0); //DragQueryFile returns the required size, in characters.
-				fileNames[i] = new wchar_t[file_name_buf_size + 1]; // create file name buffer + 1 for ending zero
-				if(file_name_buf_size == DragQueryFile(hDrop, i, fileNames[i], file_name_buf_size + 1))
+				fileNames[fileNamesIndex] = new wchar_t[file_name_buf_size + 1]; // create file name buffer + 1 for ending zero
+				DragQueryFile(hDrop, i, fileNames[fileNamesIndex], file_name_buf_size + 1);
+				DWORD Attributes = GetFileAttributes(fileNames[fileNamesIndex]);
+				if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					// skip directories
+					delete [] fileNames[fileNamesIndex];
 					continue;
+				}
+				++fileNamesIndex;
 			}
-			LogFileWriter logWriter = LogFileWriter(fileNames, nFiles);
+			UINT filesCount = fileNamesIndex; // the number of selected files
+			LogFileWriter logWriter = LogFileWriter(fileNames, filesCount);
 
 			wchar_t * logName = L"FilesInfoShExtLog.log";
 			logWriter.CreateAndWrite(logName);
 			// free files name buffers
-			for(UINT i = 0; i < nFiles; i++)
+			for(UINT i = 0; i < filesCount; i++)
 			{
 				delete[] fileNames[i];
 			}
@@ -147,8 +156,18 @@ IFACEMETHODIMP FileContextMenuExt::Initialize(
             UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
             if (nFiles >= 1)
             {
-                hr = S_OK;
-				m_pDataObj = pDataObj;
+				const UINT numeBufferSize = 2 * MAX_PATH;
+				wchar_t filePath[numeBufferSize];
+				for(UINT i = 0; i < nFiles; i++)
+				{
+					DragQueryFile(hDrop, i, filePath, numeBufferSize);
+					DWORD Attributes = GetFileAttributes(filePath);
+					if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+						continue; // skip directories
+					hr = S_OK; // display context menu item
+					m_pDataObj = pDataObj;
+					break; // break loop if we meet file
+				}
             }
 
             GlobalUnlock(stm.hGlobal);

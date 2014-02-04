@@ -10,6 +10,7 @@ without opening file.
 #include "FileProperties.h"
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 
 #pragma comment(lib, "shlwapi.lib")
@@ -44,18 +45,18 @@ bool FileProperties::init(void)
 {
 	if (m_initialized)
 		return TRUE;
+	// File size using boost
+    boost::filesystem::path p(m_file_name_) ;
+	m_file_size = boost::filesystem::file_size(p);
+	
 	WIN32_FILE_ATTRIBUTE_DATA fad;
 	if (!GetFileAttributesEx(m_file_name_.c_str(), GetFileExInfoStandard, &fad))
         return FALSE; // error condition, could call GetLastError to find out more
-	// File size
-    m_file_size.HighPart = fad.nFileSizeHigh;
-    m_file_size.LowPart = fad.nFileSizeLow;
 	// File creation time
 	PFILETIME ftCreate;
 	// SYSTEMTIME is another name for struct _SYSTEMTIME structure (a typedef)
 	SYSTEMTIME stUTC;
 	ftCreate = &fad.ftCreationTime;
-
 	// Convert the file created time to local time.
 	FileTimeToSystemTime(ftCreate, &stUTC);
 	SystemTimeToTzSpecificLocalTime(NULL, &stUTC, &m_stLocal);
@@ -66,7 +67,7 @@ bool FileProperties::WriteFileSize(std::wostream & input_file)
 {
 	if(!init())
 		return FALSE;
-	input_file << "Size: " << m_file_size.QuadPart;
+	input_file << "Size: " << m_file_size;
     return TRUE;
 }
 bool FileProperties::WriteFileCreatingTime(std::wostream & input_file)
@@ -79,6 +80,42 @@ bool FileProperties::WriteFileCreatingTime(std::wostream & input_file)
 		m_stLocal.wYear <<  L" : "<< L" " << m_stLocal.wHour << L":" << m_stLocal.wMinute;
 	input_file.fill(old_char_fill);
 	input_file.width(old_field_width);
+	return TRUE;
+}
+bool FileProperties::GetFileSize(boost::uintmax_t & file_size)
+{
+	if(!init())
+		return FALSE;
+	file_size = m_file_size;
+	return TRUE;
+}
+bool FileProperties::GetFileCreatingTime(SYSTEMTIME & stLocal)
+{
+	if(!init())
+		return FALSE;
+	stLocal = m_stLocal;
+	return TRUE;
+}
+bool FileProperties::GetFileCheckSum(unsigned __int32 & checkSum)
+{
+	std::ifstream selectedFile;
+    selectedFile.open(m_file_name_, std::ios::binary | std::ios::in);
+    if(!selectedFile.is_open())
+    {
+        return FALSE;
+    }
+	// BSD checksum
+    char ch;
+	checkSum = 0;
+	const unsigned int LastBitPosition = 8 * sizeof(__int32) - 1; // 31
+    while(!selectedFile.eof())
+    {
+		selectedFile.read(&ch, 1);
+     	checkSum = (checkSum >> 1) + ((checkSum & 1) << LastBitPosition);
+		checkSum += static_cast<unsigned int>(ch);
+		checkSum &= 0xffffffff;
+    }
+	selectedFile.close();
 	return TRUE;
 }
 FileProperties::~FileProperties(void)

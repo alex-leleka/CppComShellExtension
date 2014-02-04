@@ -34,8 +34,8 @@ const CLSID CLSID_FileContextMenuExt =
 HINSTANCE   g_hInst     = NULL;
 long        g_cDllRef   = 0;
 
-// Files Name Suffix Format for supported files 
-const wchar_t * FileNameSuffix = L"*"; // any file
+// Files Class Type for supported files 
+const wchar_t * FileClassType = L"AllFileSystemObjects"; // any file
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
 	switch (dwReason)
@@ -126,8 +126,8 @@ STDAPI DllRegisterServer(void)
     if (SUCCEEDED(hr))
     {
         // Register the context menu handler. The context menu handler is 
-        // associated with the FileNameSuffix file class.
-        hr = RegisterShellExtContextMenuHandler(FileNameSuffix, 
+        // associated with the FileClassType file class.
+        hr = RegisterShellExtContextMenuHandler(FileClassType, 
             CLSID_FileContextMenuExt, 
             L"CppShellExtContextMenuHandler.FileContextMenuExt");
     }
@@ -157,7 +157,7 @@ STDAPI DllUnregisterServer(void)
     if (SUCCEEDED(hr))
     {
         // Unregister the context menu handler.
-        hr = UnregisterShellExtContextMenuHandler(FileNameSuffix, 
+        hr = UnregisterShellExtContextMenuHandler(FileClassType, 
             CLSID_FileContextMenuExt);
     }
 

@@ -88,11 +88,13 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
+      <AdditionalIncludeDirectories>C:\Alex\GLTask\boost_1_55_0\stage\lib;C:\Alex\GLTask\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>GlobalExportFunctions.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>C:\Alex\GLTask\boost_1_55_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -161,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="..\LogFileWriter\FileProperties.h" />
     <ClInclude Include="..\LogFileWriter\LogFileWriter.h" />
+    <ClInclude Include="..\LogFileWriter\semaphore.h" />
     <ClInclude Include="ClassFactory.h" />
     <ClInclude Include="FileContextMenuExt.h" />
     <ClInclude Include="Reg.h" />
@@ -169,6 +172,7 @@
   <ItemGroup>
     <ClCompile Include="..\LogFileWriter\FileProperties.cpp" />
     <ClCompile Include="..\LogFileWriter\LogFileWriter.cpp" />
+    <ClCompile Include="..\LogFileWriter\semaphore.cpp" />
     <ClCompile Include="ClassFactory.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
