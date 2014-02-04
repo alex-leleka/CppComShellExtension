@@ -21,7 +21,7 @@ public:
 	FileProperties(const wchar_t *);
 	FileProperties(const std::wstring &);
 	~FileProperties(void);
-	// TODO: next members
+
 	bool GetFileSize(boost::uintmax_t &);
 	bool GetFileCreatingTime(SYSTEMTIME &);
 	bool GetFileCheckSum(unsigned __int32 &);
