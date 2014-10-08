@@ -14,6 +14,8 @@ defines when context menu item will be shown and reaction on item click.
 #include "resource.h"
 #include <strsafe.h>
 #include <Shlwapi.h>
+#include <vector>
+#include <string>
 
 #pragma comment(lib, "shlwapi.lib")
 
@@ -51,41 +53,41 @@ void FileContextMenuExt::OnVerbCreateLogFile(HWND hWnd)
 
     if ((m_pDataObj->GetData(&fe, &stm)) >= 0)
     {
+		using std::vector;
+		using std::wstring;
         // The HDROP handle of  for enumerating the selected files and 
 		// folders.
         HDROP hDrop = static_cast<HDROP>(GlobalLock(stm.hGlobal));
         if (hDrop != NULL)
         {
-            UINT nFiles = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
-			if(nFiles < 1)
+			// With this argument DragQueryFile return the number of selected files
+			const UINT FileNumberProperty = 0xFFFFFFFF; 
+            UINT nFiles = DragQueryFile(hDrop, FileNumberProperty, NULL, 0);
+			if(nFiles == 0)
 				return;
-			wchar_t ** fileNames = new wchar_t*[nFiles];
-			UINT fileNamesIndex = 0;
+			vector<wstring> fileNames;
+			UINT file_name_buf_size = DragQueryFile(hDrop, 0, NULL, 0) + 1; //DragQueryFile returns the required size, in characters.
+			wchar_t * file_name_buffer = new wchar_t[file_name_buf_size];
 			for(UINT i = 0; i < nFiles; i++)
 			{
-				UINT file_name_buf_size =  DragQueryFile(hDrop, i, NULL, 0); //DragQueryFile returns the required size, in characters.
-				fileNames[fileNamesIndex] = new wchar_t[file_name_buf_size + 1]; // create file name buffer + 1 for ending zero
-				DragQueryFile(hDrop, i, fileNames[fileNamesIndex], file_name_buf_size + 1);
-				DWORD Attributes = GetFileAttributes(fileNames[fileNamesIndex]);
-				if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+				UINT current_file_name_buf_size =  DragQueryFile(hDrop, i, NULL, 0) + 1; //Find required buffer size for next file name.
+				if (file_name_buf_size < current_file_name_buf_size) 
 				{
-					// skip directories
-					delete [] fileNames[fileNamesIndex];
-					continue;
+					//increase buffer size
+					delete [] file_name_buffer;
+					file_name_buf_size = current_file_name_buf_size;
+					wchar_t * file_name_buffer = new wchar_t[file_name_buf_size]; // create file name buffer + 1 for ending zero
 				}
-				++fileNamesIndex;
+				DragQueryFile(hDrop, i,  file_name_buffer, file_name_buf_size);
+				DWORD Attributes = GetFileAttributes(file_name_buffer);
+				if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+					continue; // skip directories
+				fileNames.push_back(wstring(file_name_buffer));
 			}
-			UINT filesCount = fileNamesIndex; // the number of selected files
-			LogFileWriter logWriter = LogFileWriter(fileNames, filesCount);
+			LogFileWriter logWriter = LogFileWriter(fileNames);
 
 			wchar_t * logName = L"FilesInfoShExtLog.log";
 			logWriter.CreateAndWrite(logName);
-			// free files name buffers
-			for(UINT i = 0; i < filesCount; i++)
-			{
-				delete[] fileNames[i];
-			}
-			delete[] fileNames;
             GlobalUnlock(stm.hGlobal);
         }
 

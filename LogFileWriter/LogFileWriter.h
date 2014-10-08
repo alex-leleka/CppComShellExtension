@@ -2,13 +2,18 @@
 Module Name:  LogFileWriter.h
 Project:      LogFileWriter
 
-Module create or rewrite log file. Write in log metadata(creating date, size)
-of files received in the constructor sorted in alphabetical order.
+This file implements classes for writing selected files meta-data in log file.
+It writes in log creating date, size of files received in the constructor
+sorted in alphabetical order.
 
 \***************************************************************************/
 #pragma once
 
 #include <iostream>
+#include <memory>
+#include <vector>
+#include <string>
+#include <cstdint>
 #include "semaphore.h"
 #include <Shlwapi.h> 
 #include "FileProperties.h"
@@ -17,26 +22,28 @@ class LogFileWriter
 {
 	struct TaskWorkerResults
 	{
-		boost::uintmax_t fileSize;
+		uintmax_t fileSize;
 		SYSTEMTIME stLocal;
-		unsigned __int32 checkSum;
+		uint32_t checkSum;
 	};
 	struct TaskWorkerData
 	{
-		wchar_t ** filesName;
-		LogFileWriterSynchronizationPrimitives::Semaphore * semArray;
-		TaskWorkerResults * results;
+		TaskWorkerData(std::vector<std::wstring> & _filesName);
+		std::vector<std::wstring> & filesName;
+		std::vector<std::shared_ptr<LogFileWriterSynchronizationPrimitives::Semaphore> > semArray;
+		std::vector<TaskWorkerResults> results;
+
 	};
 	static void FileInfoTaskWorker(TaskWorkerData &, unsigned int );
-	wchar_t ** files_name_;
-	unsigned int files_count_;
-	void sort_files_name_array(void);
-	void write_data_in_log(wchar_t *);
-	wchar_t * identify_local_file_name(wchar_t * ); // file name without path
+	std::vector<std::wstring> m_fileNames;
+	void SortFilesNameArray();
+	void WriteDataInLog(const std::wstring & logFileName);
 	void WriteFileInfo(std::wostream & ,  TaskWorkerResults & res);
+	std::wstring getFileName(const std::wstring & file_name);
+	std::wstring getLogPath(const std::wstring &file_name);
 public:
-	void CreateAndWrite(wchar_t *);
-	LogFileWriter(wchar_t ** files_name, unsigned int files_count);
-	~LogFileWriter(void);
+	void CreateAndWrite(const std::wstring & logFileName);
+	explicit LogFileWriter(std::vector<std::wstring> & files_name);
+	~LogFileWriter();
 };
 

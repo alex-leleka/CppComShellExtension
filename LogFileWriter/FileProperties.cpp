@@ -2,43 +2,32 @@
 Module Name:  FileProperties.cpp
 Project:      LogFileWriter
 
-Module using to write file metadata(creating date, size) in std::wostream 
-without opening file.
+File implements methods to get file metadata(creating date, size) and check sum
+using WinAPI and boost.
 
+Exceptons: FilePropertiesException
 \***************************************************************************/
 
-#include "FileProperties.h"
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include "FileProperties.h"
+#include "FilePropertiesException.h"
 
 #pragma comment(lib, "shlwapi.lib")
 
-
-FileProperties::FileProperties(const wchar_t * file_name)
-{
-	m_initialized = false;
-	if (file_name ==  nullptr)
-	{
-		//raise exception
-		throw std::string("wrong arguments!");
-		return;
-	}
-	// create string with path to file
-	m_file_name_ = std::wstring(file_name);
-}
-FileProperties::FileProperties(const std::wstring & file_name)
+FileProperties::FileProperties(const std::wstring & fileName)
 {
 	m_initialized = FALSE;
-	if (file_name.empty())
+	if (fileName.empty())
 	{
 		//raise exception
-		throw std::string("wrong arguments!");
+		throw FilePropertiesException("File name is empty!");
 		return;
 	}
 	// create string with path to file
-	m_file_name_ = std::wstring(file_name);
+	m_fileName = std::wstring(fileName);
 }
 
 bool FileProperties::init(void)
@@ -46,11 +35,11 @@ bool FileProperties::init(void)
 	if (m_initialized)
 		return TRUE;
 	// File size using boost
-    boost::filesystem::path p(m_file_name_) ;
-	m_file_size = boost::filesystem::file_size(p);
+    boost::filesystem::path p(m_fileName) ;
+	m_fileSize = boost::filesystem::file_size(p);
 	
 	WIN32_FILE_ATTRIBUTE_DATA fad;
-	if (!GetFileAttributesEx(m_file_name_.c_str(), GetFileExInfoStandard, &fad))
+	if (!GetFileAttributesEx(m_fileName.c_str(), GetFileExInfoStandard, &fad))
         return FALSE; // error condition, could call GetLastError to find out more
 	// File creation time
 	PFILETIME ftCreate;
@@ -63,30 +52,12 @@ bool FileProperties::init(void)
 	return m_initialized = TRUE;
 
 }
-bool FileProperties::WriteFileSize(std::wostream & input_file)
+
+bool FileProperties::GetFileSize(boost::uintmax_t & fileSize)
 {
 	if(!init())
 		return FALSE;
-	input_file << "Size: " << m_file_size;
-    return TRUE;
-}
-bool FileProperties::WriteFileCreatingTime(std::wostream & input_file)
-{
-	if(!init())
-		return FALSE;
-	auto old_char_fill = input_file.fill(L'0');
-	auto old_field_width = input_file.width(2);
-	input_file << L"Created on: " << m_stLocal.wDay << L"/" << m_stLocal.wMonth << L"/" <<
-		m_stLocal.wYear <<  L" : "<< L" " << m_stLocal.wHour << L":" << m_stLocal.wMinute;
-	input_file.fill(old_char_fill);
-	input_file.width(old_field_width);
-	return TRUE;
-}
-bool FileProperties::GetFileSize(boost::uintmax_t & file_size)
-{
-	if(!init())
-		return FALSE;
-	file_size = m_file_size;
+	fileSize = m_fileSize;
 	return TRUE;
 }
 bool FileProperties::GetFileCreatingTime(SYSTEMTIME & stLocal)
@@ -96,10 +67,10 @@ bool FileProperties::GetFileCreatingTime(SYSTEMTIME & stLocal)
 	stLocal = m_stLocal;
 	return TRUE;
 }
-bool FileProperties::GetFileCheckSum(unsigned __int32 & checkSum)
+bool FileProperties::GetFileCheckSum(uint32_t & checkSum)
 {
 	std::ifstream selectedFile;
-    selectedFile.open(m_file_name_, std::ios::binary | std::ios::in);
+    selectedFile.open(m_fileName, std::ios::binary | std::ios::in);
     if(!selectedFile.is_open())
     {
         return FALSE;
@@ -107,12 +78,12 @@ bool FileProperties::GetFileCheckSum(unsigned __int32 & checkSum)
 	// BSD checksum
     char ch;
 	checkSum = 0;
-	const unsigned int LastBitPosition = 8 * sizeof(__int32) - 1; // 31
+	const uint32_t LastBitPosition = 8 * sizeof(uint32_t) - 1; // 31
     while(!selectedFile.eof())
     {
 		selectedFile.read(&ch, 1);
      	checkSum = (checkSum >> 1) + ((checkSum & 1) << LastBitPosition);
-		checkSum += static_cast<unsigned int>(ch);
+		checkSum += static_cast<uint32_t>(ch);
 		checkSum &= 0xffffffff;
     }
 	selectedFile.close();

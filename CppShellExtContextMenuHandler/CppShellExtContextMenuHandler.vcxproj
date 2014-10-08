@@ -107,11 +107,17 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
+      <AdditionalIncludeDirectories>D:\boost\boost_1_55_0\;D:\boost\boost_1_55_0\stage\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>GlobalExportFunctions.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>D:\boost\boost_1_55_0\stage\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -162,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\LogFileWriter\FileProperties.h" />
+    <ClInclude Include="..\LogFileWriter\FilePropertiesException.h" />
     <ClInclude Include="..\LogFileWriter\LogFileWriter.h" />
     <ClInclude Include="..\LogFileWriter\semaphore.h" />
     <ClInclude Include="ClassFactory.h" />
@@ -171,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LogFileWriter\FileProperties.cpp" />
+    <ClCompile Include="..\LogFileWriter\FilePropertiesException.cpp" />
     <ClCompile Include="..\LogFileWriter\LogFileWriter.cpp" />
     <ClCompile Include="..\LogFileWriter\semaphore.cpp" />
     <ClCompile Include="ClassFactory.cpp" />

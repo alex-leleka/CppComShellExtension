@@ -42,6 +42,9 @@
     <ClCompile Include="..\LogFileWriter\semaphore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\LogFileWriter\FilePropertiesException.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClassFactory.h">
@@ -63,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\LogFileWriter\semaphore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LogFileWriter\FilePropertiesException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
